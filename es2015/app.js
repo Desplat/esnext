@@ -79,6 +79,7 @@ class FreeTrip extends Trip {
 
 const freeTrip = new FreeTrip('nantes', 'Nantes', 'img/nantes.jpg');
 lg(freeTrip.toString());
+lg('*************************');
 
 
 class TripService {
@@ -90,11 +91,11 @@ class TripService {
         let tripNantes = new Trip('nantes', 'Nantes', 'img/nantes.jpg');
         let tripRio = new Trip('rio-de-janeiro', 'Rio de Janeiro', 'img/rio-de-janeiro.jpg');
 
-        let service = new Set();
+        this.service = new Set();
 
-        service.add(tripParis);
-        service.add(tripNantes);
-        service.add(tripRio);
+        this.service.add(tripParis);
+        this.service.add(tripNantes);
+        this.service.add(tripRio);
 
     }
 
@@ -107,16 +108,14 @@ class TripService {
 
                 // TODO utiliser resolve et reject en fonction du résultat de la recherche
 
-                if (this.service.has(tripname)) {
-                    this.service.forEach(element => {
-                        if (element.name === tripName) {
-                            resolve(element);
-                        }
-                    })
-                }
-                else {
-                    reject(`No trip with name ${tripName}`);
-                }
+                this.service.forEach(element => {
+                    if (element.name === tripName) {
+                        resolve(element);
+                        return;
+                    }
+                })
+                reject(`No trip with name : ${tripName}`);
+
             }, 2000)
         });
     }
@@ -129,10 +128,10 @@ class PriceService {
         // 'paris' --> price = 100
         // 'rio-de-janeiro' --> price = 800)
         // no price for 'nantes'
-        let prices = new Map();
+        this.prices = new Map();
 
-        prices.add('paris', 100);
-        prices.add('rio-de-janeiro', 800);
+        this.prices.set('paris', 100);
+        this.prices.set('rio-de-janeiro', 800);
 
     }
 
@@ -144,8 +143,62 @@ class PriceService {
                 // ici l'exécution du code est asynchrone
 
                 // TODO utiliser resolve et reject en fonction du résultat de la recherche
+                if (this.prices.has(tripId)) {
+
+                    resolve(this.prices.get(tripId));
+                }
+                else {
+                    reject(`No price found for id : ${tripId}`);
+                }
 
             }, 2000)
         });
     }
 }
+
+const tripService = new TripService();
+const priceService = new PriceService();
+
+tripService.findByName('Paris')
+    .then(id => {
+        lg(`Trip found : ${id}`);
+    }, error => {
+        lg(error);
+    }
+    );
+
+tripService.findByName('Toulouse')
+    .then(id => {
+        lg(`Trip found : ${id}`);
+    }, error => {
+        lg(error);
+    }
+    );
+
+tripService.findByName('Rio de Janeiro')
+    .then(trip => {
+        priceService.findPriceByTripId(trip.id)
+            .then(id => {
+                lg(`Price found : ${id}`);
+            }, error => {
+                lg(error);
+            }
+            );
+    }, error => {
+        lg(error);
+    }
+    )
+
+tripService.findByName('Nantes')
+    .then(trip => {
+        priceService.findPriceByTripId(trip.id)
+            .then(id => {
+                lg(`Price found : ${id}`);
+            }, error => {
+                lg(error);
+            }
+            );
+    }, error => {
+        lg(error);
+    }
+    )
